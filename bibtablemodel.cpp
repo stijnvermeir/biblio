@@ -47,8 +47,20 @@ struct BibTableModel::Pimpl : public virtual QAbstractTableModel
 			{
 				if (index.row() < rowCount() && index.column() < columnCount())
 				{
-					return BibData::instance().get(index.row(), COLUMNS[index.column()].column);
+					auto col = COLUMNS[index.column()].column;
+					auto data = BibData::instance().get(index.row(), col);
+					if (col == BibColumn::Tags)
+					{
+						auto tags = data.toStringList();
+						tags.sort(Qt::CaseInsensitive);
+						return tags.join(" / ");
+					}
+					return data;
 				}
+			}
+			if (role == Qt::UserRole)
+			{
+				return BibData::instance().get(index.row(), BibColumn::Id);
 			}
 		}
 		return QVariant();
@@ -77,6 +89,7 @@ struct BibTableModel::Pimpl : public virtual QAbstractTableModel
 
 BibTableModel::BibTableModel()
     : pimpl_(new Pimpl())
+    , searchTerm_()
 {
 	setSourceModel(pimpl_.data());
 }
@@ -85,4 +98,13 @@ BibTableModel::~BibTableModel()
 {
 }
 
+void BibTableModel::setSearchTerm(const QString& term)
+{
+	searchTerm_ = term;
+	invalidateFilter();
+}
 
+bool BibTableModel::filterAcceptsRow(int source_row, const QModelIndex& /*source_parent*/) const
+{
+	return BibData::instance().get(source_row, BibColumn::Tags).toStringList().join(" ").contains(searchTerm_, Qt::CaseInsensitive);
+}

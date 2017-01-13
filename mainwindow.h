@@ -4,6 +4,7 @@
 
 #include <QMainWindow>
 #include <QCompleter>
+#include <QStringListModel>
 
 namespace Ui {
 class MainWindow;
@@ -21,4 +22,5 @@ private:
 	Ui::MainWindow *ui;
 	BibTableModel model_;
 	QCompleter completer_;
+	QStringListModel* completerModel_;
 };

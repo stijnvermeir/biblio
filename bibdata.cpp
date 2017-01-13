@@ -168,7 +168,7 @@ struct BibData::Pimpl
 				{
 					list += tags_[tagId];
 				}
-				return list.join(" --- ");
+				return list;
 			}
 		}
 		return QVariant();
@@ -179,13 +179,18 @@ struct BibData::Pimpl
 		return tags_.values();
 	}
 
+	bool doesTagExist(const QString& tag) const
+	{
+		return tagsReversed_.contains(tag);
+	}
+
 	QVariant findRow(const int documentId) const
 	{
-		for (const Row& row : data_)
+		for (int row = 0; row < data_.size(); ++row)
 		{
-			if (row.id == documentId)
+			if (data_[row].id == documentId)
 			{
-				return row.id;
+				return row;
 			}
 		}
 		return QVariant();
@@ -221,11 +226,6 @@ struct BibData::Pimpl
 		}
 	}
 
-	void updateDocument(const int documentId, const QString& name, const int boxNr, const QString& file, const QStringList& tags)
-	{
-
-	}
-
 	void insertTag(const QString& tag)
 	{
 		if (!tagsReversed_.contains(tag))
@@ -249,6 +249,60 @@ struct BibData::Pimpl
 		q.addBindValue(documentId);
 		q.addBindValue(tagId);
 		q.exec();
+	}
+
+	void updateDocument(const int documentId, const QString& name, const int boxNr, const QString& file, const QStringList& tags)
+	{
+		auto row = findRow(documentId);
+		if (row.isNull())
+		{
+			return;
+		}
+		Row& r = data_[row.toInt()];
+		r.name = name;
+		r.boxNr = boxNr;
+		r.filePath = file;
+		r.tags.clear();
+		for (const auto& tag : tags)
+		{
+			insertTag(tag);
+			r.tags.push_back(tagsReversed_[tag]);
+		}
+		QSqlDatabase db = conn();
+		QSqlQuery q(db);
+		q.prepare("UPDATE document SET name = ?, boxnr = ?, filepath = ? WHERE document_id = ?");
+		q.addBindValue(r.name);
+		q.addBindValue(r.boxNr);
+		q.addBindValue(r.filePath);
+		q.addBindValue(documentId);
+		q.exec();
+		// delete old tags
+		q.prepare("DELETE FROM document_tag WHERE document_id = ?");
+		q.addBindValue(documentId);
+		q.exec();
+		// add new tags
+		for (const auto& t : r.tags)
+		{
+			insertDocumentTag(documentId, t);
+		}
+	}
+
+	void deleteDocument(const int documentId)
+	{
+		auto row = findRow(documentId);
+		if (row.isNull())
+		{
+			return;
+		}
+		QSqlDatabase db = conn();
+		QSqlQuery q(db);
+		q.prepare("DELETE FROM document_tag WHERE document_id = ?");
+		q.addBindValue(documentId);
+		if (!q.exec()) return;
+		q.prepare("DELETE FROM document WHERE id = ?");
+		q.addBindValue(documentId);
+		if (!q.exec()) return;
+		data_.remove(row.toInt());
 	}
 };
 
@@ -282,6 +336,16 @@ QStringList BibData::getTags() const
 	return pimpl_->getTags();
 }
 
+bool BibData::doesTagExist(const QString& tag) const
+{
+	return pimpl_->doesTagExist(tag);
+}
+
+void BibData::insertTag(const QString &tag)
+{
+	pimpl_->insertTag(tag);
+}
+
 QVariant BibData::findRow(const int documentId) const
 {
 	return pimpl_->findRow(documentId);
@@ -295,4 +359,9 @@ void BibData::insertDocument(const QString& name, const int boxNr, const QString
 void BibData::updateDocument(const int documentId, const QString& name, const int boxNr, const QString& file, const QStringList& tags)
 {
 	pimpl_->updateDocument(documentId, name, boxNr, file, tags);
+}
+
+void BibData::deleteDocument(const int documentId)
+{
+	pimpl_->deleteDocument(documentId);
 }

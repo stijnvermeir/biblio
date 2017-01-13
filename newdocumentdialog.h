@@ -13,8 +13,7 @@ class NewDocumentDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit NewDocumentDialog(QWidget *parent = 0);
-	explicit NewDocumentDialog(int documentId, QWidget *parent = 0);
+	explicit NewDocumentDialog(const QVariant& documentId = QVariant(), QWidget *parent = 0);
 	~NewDocumentDialog();
 
 	virtual void accept();
