@@ -270,7 +270,7 @@ struct BibData::Pimpl
 		}
 		QSqlDatabase db = conn();
 		QSqlQuery q(db);
-		q.prepare("UPDATE document SET name = ?, boxnr = ?, filepath = ? WHERE document_id = ?");
+		q.prepare("UPDATE document SET name = ?, boxnr = ?, filepath = ? WHERE id = ?");
 		q.addBindValue(r.name);
 		q.addBindValue(r.boxNr);
 		q.addBindValue(r.filePath);

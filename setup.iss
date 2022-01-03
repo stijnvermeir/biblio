@@ -30,7 +30,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\deploy\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#ProgramFilesX86}\Microsoft Visual Studio 14.0\VC\redist\1033\vcredist_x86.exe"; DestDir: {tmp}; Flags: deleteafterinstall
+Source: "{#ProgramFilesX86}\Microsoft Visual Studio\2019\Community\VC\Redist\MSVC\v142\vcredist_x86.exe"; DestDir: {tmp}; Flags: deleteafterinstall
 
 [Icons]
 Name: "{group}\Biblio"; Filename: "{app}\biblio.exe"
@@ -38,6 +38,6 @@ Name: "{group}\{cm:UninstallProgram,Biblio}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\Biblio"; Filename: "{app}\biblio.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{tmp}\vcredist_x86.exe"; Parameters: "/quiet /norestart"; StatusMsg: "Installing Visual C++ 2015 x86 Redistributable ..."
+Filename: "{tmp}\vcredist_x86.exe"; Parameters: "/quiet /norestart"; StatusMsg: "Installing Visual C++ 2019 x86 Redistributable ..."
 Filename: "{app}\biblio.exe"; Description: "{cm:LaunchProgram,Biblio}"; Flags: nowait postinstall skipifsilent
 
